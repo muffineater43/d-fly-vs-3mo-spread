@@ -11,14 +11,14 @@ warnings.filterwarnings("ignore", message="Workbook contains no default style")
 st.set_page_config(layout="wide")
 st.title("d-fly vs 3mo spread")
 
-# 1) Upload two CSVs
+# Upload two CSVs
 fly_file = st.sidebar.file_uploader("Upload double-butterfly CSV", type="csv")
 leg_file = st.sidebar.file_uploader("Upload 3 month spread CSV",   type="csv")
 if not fly_file or not leg_file:
     st.sidebar.info("Please upload both a d-fly and an spread CSV.")
     st.stop()
 
-# 2) Load and align on common dates
+# Load and align on common dates
 df_fly = pd.read_csv(fly_file, parse_dates=["Timestamp (UTC)"])
 df_leg = pd.read_csv(leg_file, parse_dates=["Timestamp (UTC)"])
 common = set(df_fly["Timestamp (UTC)"]) & set(df_leg["Timestamp (UTC)"])
@@ -33,7 +33,7 @@ df = pd.DataFrame({
 df.index = pd.to_datetime(df.index)
 df.sort_index(inplace=True)
 
-# 3) Rolling 3-month regression
+# Rolling 3-month regression
 betas, alphas = [], []
 min_periods = 50
 for t in df.index:
@@ -52,7 +52,7 @@ df["intercept"] = alphas
 df["predicted"] = df["beta"] * df["leg"] + df["intercept"]
 df["residual"]  = df["fly"] - df["predicted"]
 
-# 4) Compute and display metrics
+# Compute and display metrics
 mu      = df["residual"].mean()
 sigma   = df["residual"].std(ddof=1)
 latest  = df["residual"].iloc[-1]
@@ -74,7 +74,7 @@ st.write(f"Std Dev:  {sigma2:.4f}")
 st.write(f"Skewness: {skw:.4f}")
 st.write(f"Kurtosis: {kurt_p:.4f}")
 
-# 5) Optional histogram with fitted normal curve
+# Optional histogram with fitted normal curve
 fig, ax = plt.subplots()
 ax.hist(residuals, bins=30, density=True, alpha=0.6)
 x = np.linspace(mu2 - 4*sigma2, mu2 + 4*sigma2, 200)
@@ -82,7 +82,7 @@ ax.plot(x, norm.pdf(x, mu2, sigma2), linewidth=2)
 ax.set_title("Residuals Histogram with Fitted Normal Curve")
 st.pyplot(fig, use_container_width=True)
 
-# 6) Save feature: record butterfly name and current metrics
+# Save feature: record butterfly name and current metrics
 if "history" not in st.session_state:
     st.session_state.history = []
 
@@ -98,7 +98,7 @@ def save_metrics():
 
 st.button("Save Metrics", on_click=save_metrics)
 
-# 7) Show and download history
+# Show and download history
 if st.session_state.history:
     st.subheader("Saved Metrics History")
     hist_df = pd.DataFrame(st.session_state.history)
